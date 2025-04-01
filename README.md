@@ -2,7 +2,7 @@
 Code for Sorbet model
 
 ## Quick start-up
-run `bash scripts/run_glue.sh $TaskName$` to evaluate the Sorbet model
+run `bash run_glue.sh $TaskName$` to evaluate the Sorbet model
 
 ## Training hyperparameters
 
