@@ -4,6 +4,18 @@ Code for Sorbet model
 ## Quick start
 run `bash run_glue.sh $TaskName$`
 
+## Pretrained full precision ANN weight for each dataset
+Can be directly downloaded:
+- MNLI: https://huggingface.co/textattack/bert-base-uncased-MNLI
+- QQP:	https://huggingface.co/textattack/bert-base-uncased-QQP
+- QNLI:	https://huggingface.co/textattack/bert-base-uncased-QNLI
+- SST-2:	https://huggingface.co/textattack/bert-base-uncased-SST-2
+- STS-B:	https://huggingface.co/textattack/bert-base-uncased-STS-B
+- MRPC:	https://huggingface.co/textattack/bert-base-uncased-MRPC
+- RTE:	https://huggingface.co/textattack/bert-base-uncased-RTE
+
+
+
 ## Training hyperparameters
 
 | Dataset | Max Seq Length | Batch Size | Learning Rate |
