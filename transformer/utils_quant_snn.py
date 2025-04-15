@@ -11,6 +11,8 @@ import logging
 import math
 import catSNN
 import catCuda
+Timestep = 16
+Tbias = 8 # need a bias which is half of the timestep.
 
 def create_spike_input_cuda(input,T, theta):
     spikes_data = [input for _ in range(T)]
@@ -23,8 +25,6 @@ def find_closest_power_of_two(partition):
     # return 2 ** power
     lower_power = 2 ** math.floor(math.log2(partition))
     upper_power = 2 ** math.ceil(math.log2(partition))
-    # print(lower_power)
-    # print(upper_power)
     
     if abs(partition - lower_power) < abs(partition - upper_power):
         a = lower_power
@@ -79,11 +79,11 @@ class ElasticQuantBinarizerSigned(torch.autograd.Function):
         ctx.save_for_backward(input, alpha)
         ctx.other = grad_scale, Qn, Qp
         if num_bits == 1:
-            q_w = input.sign()
+            q_w = input.sign() + Tbias
         else:
-            q_w = (input / alpha).round().clamp(Qn, Qp) + 8
+            q_w = (input / alpha).round().clamp(Qn, Qp) + Tbias
 
-            output_spike = create_spike_input_cuda(q_w, 16, 16)
+        output_spike = create_spike_input_cuda(q_w, Timestep, Timestep)
             
         # w_q = q_w * alpha
         # print(alpha)
@@ -135,22 +135,18 @@ class ElasticQuantBinarizerUnsigned(torch.autograd.Function):
         Qp = 2 ** (num_bits) - 1
         if num_bits == 1:
             input_ = input
+            min_val = input.min().item()
         else:
             min_val = input.min().item()
+
             if min_val < 0:
                 min_val_new = find_closest_power_of_two(abs(min_val))
                 input_ = input + min_val_new
-            elif min_val==0:
+            elif min_val == 0:
                 input_ = input
             else:
-                min_val = input.min().item()
-                if min_val < 0:
-                    min_val = - 2 ** round(math.log2(abs(min_val)))
-                elif min_val > 0:
-                    min_val = 2 ** round(math.log2(abs(min_val)))
-                input_ = input - min_val
-                min_val_new = min_val
-
+                min_val_new = 2 ** round(math.log2(min_val))
+                input_ = input - min_val_new
         eps = torch.tensor(0.00001).float().to(alpha.device)
         if alpha.item() == 1.0 and (not alpha.initialized):
             alpha.initialize_wrapper(input, num_bits, symmetric=False, init_method='default')
@@ -164,7 +160,7 @@ class ElasticQuantBinarizerUnsigned(torch.autograd.Function):
         # w_q = q_w * alpha
         # w_q = w_q + min_val
 
-        output_spike = create_spike_input_cuda(q_w, 16, 16)
+        output_spike = create_spike_input_cuda(q_w, Timestep, Timestep)
         # print(output_spike)
         # rate = torch.mean(output_spike)
         # file_path = 'spike_rate.txt'
@@ -360,7 +356,7 @@ class QuantizeLinear(nn.Linear):
 
 
         else:
-            input = input + bias/16
+            input = input + bias/Timestep
             # print(weight.shape)
             input1 = input.permute(0,3,1,2)
             out1 = input1.matmul(weight.t())
