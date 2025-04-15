@@ -6,16 +6,18 @@
 # LICENSE file in the root directory of this source tree.
 
 TASK_NAME=$1
+T=$2
 GLUE_DIR=../../../GLUE/GLUE-baselines/glue_data/${TASK_NAME} 
-TEACHER_MODEL_DIR=outputs/${TASK_NAME}/W1A1_sfm_norm12/kd_joint
-STUDENT_MODEL_DIR=outputs/${TASK_NAME}/W1A1_sfm_norm12/kd_joint
-VOCAB_DIR=../models/bert_base_uncased_pretrained_model/bert-base-uncased-${TASK_NAME}
+TEACHER_MODEL_DIR=models/${TASK_NAME}/T${T}
+STUDENT_MODEL_DIR=models/${TASK_NAME}/T${T}
+VOCAB_DIR=models/${TASK_NAME}
 OUTPUT_DIR=./outputs
 
 wbits=1
-abits=1
-JOB_ID=W${wbits}A${abits}_testSNN
+abits=$(python -c "import math; print(int(math.log2(${T})))")
+JOB_ID=testSNN
 echo $TASK_NAME
+echo $T
 echo $GLUE_DIR
 echo $TEACHER_MODEL_DIR
 echo $STUDENT_MODEL_DIR
@@ -42,4 +44,4 @@ python quant_task_distill_glue.py \
     --weight_decay 0.01 \
     --learnable_scaling \
     --distill_rep \
-    # --do_eval
+    --do_eval
