@@ -2,7 +2,11 @@
 Code for Sorbet model
 
 ## Quick start
-run `bash run_glue.sh $TaskName$`
+run `bash run_glue.sh $TaskName$ $Timestep$`
+
+Example: `bash run_glue.sh SST-2 8`
+
+Specifically, `Timestep` and `Tbias` in the SNN model file need to be specified according to the timestep you are using.
 
 ## Pretrained full precision ANN weight for each dataset
 Can be directly downloaded:
@@ -13,6 +17,10 @@ Can be directly downloaded:
 - STS-B:	https://huggingface.co/textattack/bert-base-uncased-STS-B
 - MRPC:	https://huggingface.co/textattack/bert-base-uncased-MRPC
 - RTE:	https://huggingface.co/textattack/bert-base-uncased-RTE
+
+## Trained Sorbet model on SST-2 dataset
+We provide a set of weights to evaluate our Sorbet model. Please also change the path in the script accordingly.
+https://drive.google.com/file/d/1tPBCvqxVH8JsaeBBhbQLUNARX6tGuqXb/view?usp=share_link
 
 
 
