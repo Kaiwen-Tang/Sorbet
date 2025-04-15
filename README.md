@@ -4,7 +4,7 @@ Code for Sorbet model
 ## Quick start
 run `bash run_glue.sh $TaskName$ $Timestep$`
 
-Example: `bash run_glue.sh SST-2 8`
+Example: `bash run_glue.sh SST-2 16`
 
 Specifically, `Timestep` and `Tbias` in the SNN model file need to be specified according to the timestep you are using.
 
