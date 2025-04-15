@@ -33,8 +33,8 @@ from torch.utils.data import DataLoader, RandomSampler, SequentialSampler,Tensor
 from transformer.configuration_bert import BertConfig
 from transformer.modeling_bert import BertForSequenceClassification
 # from transformer.modeling_bert_BN import BertForSequenceClassification as SFTBertForSequenceClassification
-from transformer.modeling_bert_quant_mid import BertForSequenceClassification as QuantBertForSequenceClassificationT # use as teacher model
-from transformer.modeling_bert_quant import BertForSequenceClassification as QuantBertForSequenceClassification # student
+from transformer.modeling_bert_quant import BertForSequenceClassification as QuantBertForSequenceClassificationT # use as teacher model
+from transformer.modeling_bert_quant_snn import BertForSequenceClassification as QuantBertForSequenceClassification # student
 from transformer.file_utils import WEIGHTS_NAME, CONFIG_NAME
 # import torchstat as stat
 
