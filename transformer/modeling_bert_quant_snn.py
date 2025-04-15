@@ -47,7 +47,10 @@ from torch.nn.parameter import Parameter
 from .file_utils import WEIGHTS_NAME, CONFIG_NAME
 from .configuration_bert import BertConfig
 from .utils_quant_snn import QuantizeLinear, QuantizeEmbedding, act_quant_fn, AlphaInit
-from .norm_new import MaskPowerNorm
+from .norm import MaskPowerNorm
+
+Timestep = 16
+Tbias = 8 # need a bias which is half of the timestep.
 
 logger = logging.getLogger(__name__)
 
@@ -253,25 +256,17 @@ class BertSelfAttention(nn.Module):
             file_path = 'spike_rate.txt'
             with open(file_path, 'a') as f:
                 f.write(f'{rate.item()}\n')
-            # query_layer = torch.sum(query_layer, dim=-1)
-            # query_layer = (query_layer-8) * alphaq
-
 
             key_layer, alphak, biask = act_quant_fn(key_layer, self.clip_key, self.input_bits, quant_method=self.input_quant_method,
                                      symmetric=self.sym_quant_qkvo, layerwise=self.input_layerwise)
             key_layer = torch.sum(key_layer, dim=-1)
-            key_layer = (key_layer+biask-8) * alphak
+            key_layer = (key_layer+biask-Tbias) * alphak
 
             value_layer, alphav, biasv = act_quant_fn(value_layer, self.clip_value, self.input_bits, quant_method=self.input_quant_method,
                                        symmetric=self.sym_quant_qkvo, layerwise=self.input_layerwise)
             value_layer = torch.sum(value_layer, dim=-1)
-            value_layer = (value_layer+biasv-8) * alphav
+            value_layer = (value_layer+biasv-Tbias) * alphav
 
-        # print(query_layer.shape, key_layer.shape)
-        # attention_scores = torch.matmul(
-        #     query_layer, key_layer.transpose(-1, -2))
-        # print(query_layer.shape, key_layer.shape)
-        # # torch.Size([10, 16, 12, 128, 64]) torch.Size([10, 12, 64, 128])
         query_layer = (query_layer-0.5) * alphaq
         attention_scores = query_layer.permute(0,4,1,2,3).matmul(key_layer.unsqueeze(1).transpose(-1, -2))
         attention_scores = torch.sum(attention_scores.permute(0,2,3,4,1), dim=-1)
@@ -302,12 +297,8 @@ class BertSelfAttention(nn.Module):
             file_path = 'spike_rate.txt'
             with open(file_path, 'a') as f:
                 f.write(f'{rate.item()}\n')
-            # attention_probs = (torch.sum(attention_probs, dim=-1)+biasp -8)*alphap
-        
-        # attention_probs = torch.sum(attention_probs, dim=-1)
-        # attention_probs = (attention_probs+biasp) * alphap
 
-        attention_probs = (attention_probs+ biasp/16) * alphap
+        attention_probs = (attention_probs+ biasp/Timestep) * alphap
         context_layer = attention_probs.permute(0,4,1,2,3).matmul(value_layer.unsqueeze(1))
         context_layer = torch.sum(context_layer.permute(0,2,3,4,1), dim=-1)
 
